@@ -1,19 +1,20 @@
 import {
-  ChangeEvent, FC, useEffect, useMemo, useState,
+  ChangeEvent, FC, useMemo, useState,
 } from 'react';
 import './App.scss';
 import { GoodsList } from './components/GoodsList';
 import { ActiveFilter, goodsFromServer, SortBy } from './constants';
-import { Good } from './typedefs';
+import { Good, NewGood } from './typedefs';
 import { filterGoods, sortGoods } from './utils';
+
+let lastId = 3;
 
 export const App: FC = () => {
   const [goods, setGoods] = useState<Good[]>(goodsFromServer);
   const [nameFilter, setNameFilter] = useState('');
-  const [count, setCount] = useState(0);
   const [activeFilter, setActiveFilter] = useState(ActiveFilter.All);
   const [sortBy, setSortBy] = useState(SortBy.Initial);
-  const [isReversed, setIsReversed] = useState(false);
+  const [isReversed, setIsReversed] = useState(true);
 
   const goodsToRender = useMemo(() => {
     const filteredGoods = filterGoods(goods, nameFilter, activeFilter);
@@ -23,15 +24,6 @@ export const App: FC = () => {
       ? sortedGoods.reverse()
       : sortedGoods;
   }, [nameFilter, activeFilter, sortBy, isReversed, goods]);
-
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    const intervalId = setInterval(() => console.log(new Date()), 1000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
 
   const toggleGood = (id: number): void => {
     setGoods((currentGoods) => (
@@ -63,14 +55,13 @@ export const App: FC = () => {
     ));
   };
 
-  const addEmptyGood = () => {
+  const addEmptyGood = (newGood: NewGood) => {
     setGoods((currentGoods) => (
       [
         ...currentGoods,
         {
-          id: currentGoods[currentGoods.length - 1].id + 1,
-          isActive: false,
-          name: '',
+          ...newGood,
+          id: ++lastId,
         },
       ]
     ));
@@ -108,9 +99,25 @@ export const App: FC = () => {
           <p>Search by name:</p>
           <input
             type="text"
+            value={nameFilter}
             onChange={handleNameFilterChange}
+            name="nameFilter"
           />
         </label>
+        <div>
+          <button
+            onClick={() => setNameFilter('')}
+            type="button"
+          >
+            Clear name filter
+          </button>
+          <button
+            onClick={() => setNameFilter('garlic')}
+            type="button"
+          >
+            Find garlic
+          </button>
+        </div>
         <label style={{ marginTop: '10px', display: 'block' }}>
           Filter:
           <select
@@ -166,16 +173,12 @@ export const App: FC = () => {
         >
           {isReversed ? 'Un-reverse' : 'Reverse'}
         </button>
-      </div>
 
-      <div>
-        <h2>{count}</h2>
-        <button
-          type="button"
-          onClick={() => setCount((prev) => prev + 1)}
-        >
-          ➕
-        </button>
+        <div>
+          <button type="submit">
+            Submit
+          </button>
+        </div>
       </div>
 
       <GoodsList
